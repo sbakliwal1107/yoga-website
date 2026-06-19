@@ -1,162 +1,158 @@
-# Serenity Yoga — Beginner-friendly README
+# Yogini Rakshita — Mobile App
 
-A modern yoga studio website built with **Next.js 16**, **React 19**, **TypeScript**, and **Tailwind CSS v4**.
+A React Native (Expo) mobile app for Android + iOS. All backend services use **free** tiers:
 
-Pages: Home · About · Gallery · Reviews · Contact (with a working form UI).
+| Service | Purpose | Free tier |
+| --- | --- | --- |
+| Firebase Auth | Phone-number OTP login | 10,000 verifications / month |
+| Cloud Firestore | Users, payments, reviews, contact | 1 GB storage, 50k reads / 20k writes per day |
+| Firebase Storage | UPI payment screenshots | 5 GB |
+| Jitsi Meet (`meet.jit.si`) | In-app live video classes | Free, unlimited |
+| WhatsApp via `wa.me` | Signup confirmation message | Free deep link (user taps "Send" once) |
+| UPI (manual) | Payments | No gateway fees |
 
----
+## What's inside
 
-## 1. Prerequisites
-
-You need **Node.js 18+** installed. Check:
-
-```bash
-node --version
-npm --version
 ```
-
-If those print version numbers, you're good. (You already have v25 — perfect.)
-
----
-
-## 2. Run it on your laptop
-
-Open a terminal in this folder and run:
-
-```bash
-npm install      # one-time, installs all dependencies (already done)
-npm run dev      # starts the local dev server
-```
-
-Then open <http://localhost:3000> in your browser. Edit any file in `src/` and the page reloads automatically.
-
----
-
-## 3. Project structure (what lives where)
-
-```text
-yoga-website/
-├── public/                  Static files (place your own images here)
+yoga-app/
+├── app/                       # Expo Router screens
+│   ├── _layout.tsx            # Auth gate, redirects
+│   ├── (auth)/                # login, OTP verify, signup
+│   ├── (app)/                 # Home, Online, Demo, Payment, History, Reviews, Contact, Admin
+│   └── class/[room].tsx       # Embedded Jitsi class room
 ├── src/
-│   ├── app/                 Each folder = a URL route
-│   │   ├── layout.tsx       Wraps every page (Navbar + Footer + fonts)
-│   │   ├── globals.css      Theme colors and shared styles
-│   │   ├── page.tsx         The "/" home page
-│   │   ├── about/page.tsx   The "/about" page
-│   │   ├── gallery/page.tsx The "/gallery" page
-│   │   ├── reviews/page.tsx The "/reviews" page
-│   │   └── contact/page.tsx The "/contact" page
-│   └── components/          Reusable building blocks
-│       ├── Navbar.tsx
-│       ├── Footer.tsx
-│       └── ContactForm.tsx
-├── next.config.ts           Next.js config (allows Unsplash images)
-├── package.json             Dependencies + scripts
-└── tsconfig.json            TypeScript config
+│   ├── components/            # Screen, Field, PrimaryButton, JitsiVideo
+│   ├── context/AuthContext.tsx
+│   └── lib/                   # firebase, constants, types, access, whatsapp
+├── firestore.rules            # DB security rules
+├── storage.rules              # Storage security rules
+└── app.json
 ```
 
-**Rule of thumb:** to add a new page like `/schedule`, create a folder `src/app/schedule/` with a `page.tsx` inside it.
+## One-time setup (≈ 30 minutes)
 
----
-
-## 4. How to change content
-
-| Want to change… | Edit this file |
-|---|---|
-| Studio name, hero text, classes | `src/app/page.tsx` |
-| About / founder story | `src/app/about/page.tsx` |
-| Gallery photos | `src/app/gallery/page.tsx` (`images` array) |
-| Reviews | `src/app/reviews/page.tsx` (`reviews` array) |
-| Address, email, phone | `src/app/contact/page.tsx` and `src/components/Footer.tsx` |
-| Navigation links | `src/components/Navbar.tsx` (`links` array) |
-| Colors (sage, sand, etc.) | `src/app/globals.css` (top `:root` block) |
-
----
-
-## 5. Use your own photos
-
-Right now the site uses placeholder photos from Unsplash. To swap in yours:
-
-1. Drop image files into the `public/` folder, e.g. `public/photos/class-1.jpg`.
-2. In any page, replace the URL with `/photos/class-1.jpg` (no need for the domain — `public/` is served from the root).
-
-Example:
-
-```tsx
-<Image src="/photos/class-1.jpg" alt="Morning class" fill className="object-cover" />
-```
-
----
-
-## 6. Make the contact form actually send emails
-
-Right now the form fakes a submission. To make it real, the easiest option is **Formspree** (free, 5-minute setup):
-
-1. Sign up at <https://formspree.io>.
-2. Create a form, copy your form ID (looks like `xrgjabcd`).
-3. Open `src/components/ContactForm.tsx` and replace `handleSubmit` with:
-
-```ts
-async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  setStatus("submitting");
-  const data = new FormData(e.currentTarget);
-  const res = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
-    method: "POST",
-    body: data,
-    headers: { Accept: "application/json" },
-  });
-  setStatus(res.ok ? "success" : "error");
-  if (res.ok) (e.target as HTMLFormElement).reset();
-}
-```
-
-That's it — submissions arrive in your email.
-
----
-
-## 7. Put it on the internet (deploy)
-
-The easiest way (free, takes ~3 minutes):
-
-### Option A — Vercel (recommended for Next.js)
-
-1. Create a free account at <https://vercel.com>.
-2. Push this folder to a new GitHub repo.
-3. On Vercel, click **Add New → Project**, select the repo, click **Deploy**.
-4. You'll get a live URL like `serenity-yoga.vercel.app`.
-
-### Option B — Netlify
-
-Same steps, but on <https://netlify.com>. Both are free.
-
----
-
-## 8. Buy a custom domain (optional)
-
-When you're happy with the site, get a real domain:
-
-- <https://hostinger.in> · <https://godaddy.com> · <https://namecheap.com>
-- Cost: ~₹800–1500/year for a `.com` or `.in` domain.
-- After purchase, point it at Vercel/Netlify (their docs walk you through it in one screen).
-
----
-
-## 9. Helpful scripts
+### 1. Install Node + Expo CLI
 
 ```bash
-npm run dev      # Start the local dev server (use while coding)
-npm run build    # Build the production version
-npm run start    # Run the production build locally
-npm run lint     # Check code for issues
+brew install node
+npm install -g eas-cli
 ```
 
----
+### 2. Install dependencies
 
-## 10. Where to learn more
+```bash
+cd yoga-app
+npm install
+npx expo install --check   # auto-aligns versions to your Expo SDK
+```
 
-- **Next.js docs (excellent):** <https://nextjs.org/learn>
-- **Tailwind CSS:** <https://tailwindcss.com/docs>
-- **React basics:** <https://react.dev/learn>
+### 3. Create a Firebase project (free)
 
-Enjoy building. Breathe deep.
+1. Go to <https://console.firebase.google.com/> and create a project named **Yogini Rakshita**.
+2. **Authentication → Sign-in method → Phone**: enable it. Add your own phone as a test number for development.
+3. **Firestore Database**: create in production mode, region `asia-south1` (Mumbai).
+4. **Storage**: enable, same region.
+5. Paste the contents of `firestore.rules` and `storage.rules` into the Rules tabs and publish.
+
+### 4. Add the Android + iOS app to Firebase
+
+- In project settings → **Add app → Android**, use package `com.yoginirakshita.app`. Download `google-services.json` and place it at the project root (same folder as `app.json`).
+- **Add app → iOS**, use bundle ID `com.yoginirakshita.app`. Download `GoogleService-Info.plist` and place it at the project root.
+
+> Both files are git-ignored already.
+
+### 5. Fill in your details
+
+Open `src/lib/constants.ts` and replace:
+
+- `ADMIN_PHONES` — your phone number (with `+91`).
+- `UPI.vpa` — your UPI ID (e.g. `yogini@oksbi`).
+- `OWNER_WHATSAPP` — your number to receive signup notifications, or `null` to disable.
+- `CONTACT.email`, `CONTACT.phone`, `CONTACT.address`.
+
+### 6. Build a dev client (required for phone auth + Firebase)
+
+The standard "Expo Go" app **does not** support native Firebase Auth. You need a one-time custom dev build (still free). EAS handles this for you:
+
+```bash
+eas login
+eas build:configure
+# Android dev build (free):
+eas build --profile development --platform android
+# iOS dev build (needs Apple Developer account, $99/yr to install on device — or use a simulator):
+eas build --profile development --platform ios
+```
+
+Install the resulting `.apk` (Android) or run via simulator. Then:
+
+```bash
+npm start
+```
+
+…and scan the QR code from the dev client app. Hot reload works as normal.
+
+### 7. First signup = first admin
+
+1. Open the app, sign up with the phone number you put in `ADMIN_PHONES`.
+2. Because that phone matches, your Firestore user doc will be created with `role: "admin"` and `freeAccess: true`. The **Admin** tab will appear.
+3. Done — you can now approve payments and grant free access to anyone.
+
+## How features work
+
+### Phone login
+- Login screen → enter `+91...` → Firebase sends an SMS via Phone Auth.
+- Verify screen → enter 6-digit OTP.
+- If no Firestore profile exists yet, the gate routes to **Signup**.
+
+### Signup
+- Collects Name, Age, Sex, Address, learning-for (self/kids/family/other) and a switch "this number is on WhatsApp".
+- If the switch is on, after the doc is written we open `wa.me/<number>?text=...` so WhatsApp opens with the signup summary pre-filled. The user just taps Send.
+- A copy can also be sent to `OWNER_WHATSAPP` if configured.
+
+### Demo classes
+- Each non-paid user can join up to `DEMO_LIMIT` (default 3) demo classes — counter lives in `users.demoClassesJoined`.
+- Joining atomically increments the count (Firestore `FieldValue.increment(1)`).
+- Once at 3, the join button becomes "Buy a plan".
+
+### Online classes
+- Gated by `hasPaidAccess(user)` = `role === "admin" || freeAccess === true || accessUntil > now`.
+- If a non-paid user opens the Online tab, they're redirected to Demo after a short message.
+- Paid users see today's room name and tap "Join class now" → opens the Jitsi WebView **inside** the app. No external app launch.
+
+### Payment flow
+- User picks a plan (₹1000 / ₹2700 / ₹5500).
+- Tapping "Open my UPI app" launches a `upi://pay` intent (GPay / PhonePe / Paytm picks it up).
+- User pays manually, returns to the app, attaches a screenshot, optionally adds the UPI reference, and submits.
+- A `payments` doc is created with `status: "pending"`. Admin sees it in the Admin tab.
+
+### Admin tab
+- **Payments**: see all pending/approved/rejected payments. Tap **Approve** to extend the user's `accessUntil` by the plan's days (additive — extends past today and any existing expiry). Tap **Reject** to mark rejected.
+- **Users**: list of all users with their access status. Two ways to bypass payment:
+  1. Toggle **Free access** → flips `freeAccess: true`. The user gets unlimited access immediately, no payment required (great for family).
+  2. Tap **+30d / +90d / +180d** → extends their `accessUntil` without any payment record.
+
+### Reviews, Contact
+- Reviews are world-readable, posted by signed-in users.
+- Contact messages are admin-readable only.
+
+## Running
+
+```bash
+npm start              # Metro bundler, scan QR from your dev client
+npm run android        # build + run on connected Android
+npm run ios            # build + run iOS simulator
+```
+
+## Cost reality check
+
+- Backend / video / OTP: **₹0 / month** at this scale.
+- Apple Developer Program: **$99 / year** (only if publishing on the App Store).
+- Google Play Console: **$25 one-time** (only if publishing on the Play Store).
+- WhatsApp Business API (optional, future): free for 1,000 service conversations/month, but requires business verification.
+
+## Known limitations & "phase 2"
+
+- **WhatsApp signup is semi-automatic** — the user taps "Send" inside WhatsApp. To make it fully automatic, switch to WhatsApp Business Cloud API (Meta) — still free up to 1k conversations/month but needs business verification.
+- **Payments are admin-approved** — no automatic verification. To auto-verify, integrate Razorpay/Cashfree UPI Collect (2% per transaction).
+- **`meet.jit.si`** is a public shared server. Sessions occasionally lag during peak hours. For a paid product, self-host Jitsi on a ₹500/month VM later.
+- **Class scheduling** is currently a daily room (`yogini-rakshita-live-YYYY-MM-DD`). To support multiple classes per day with descriptions, add a `classes` collection later.
