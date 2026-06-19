@@ -46,7 +46,8 @@
         {
           "photosPermission": "Allow Yogini Rakshita to access your photos to upload UPI payment screenshots."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
