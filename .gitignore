@@ -6,8 +6,6 @@ web-build/
 .DS_Store
 android/
 ios/
-GoogleService-Info.plist
-google-services.json
 .env
 .env.local
 
