@@ -12,7 +12,16 @@
           "package_name": "com.yoginirakshita.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "624774959450-dtlchba9he9s9q9hkkuujquor3rg98b0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yoginirakshita.app",
+            "certificate_hash": "de3aebb894a0572e61a94a215ee478d1963ba970"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBeGdaJi3-2PWutJXJc7lYMf1bM1aakGgc"
