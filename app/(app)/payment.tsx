@@ -41,7 +41,7 @@ export default function Payment() {
     }
     try {
       setSubmitting(true);
-      const path = payments/${fbUser.uid}/${Date.now()}.jpg;
+      const path = `payments/${fbUser.uid}/${Date.now()}.jpg`;
       const ref = storage().ref(path);
       await ref.putFile(screenshotUri);
       const url = await ref.getDownloadURL();
