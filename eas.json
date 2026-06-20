@@ -10,11 +10,11 @@
     },
     "preview": {
       "distribution": "internal",
+	  "env": {
+		  "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+	  },
       "android": {
-        "buildType": "apk",
-        "env": {
-          "NPM_COMMAND": "npm install --legacy-peer-deps --no-audit --no-fund"
-        }
+        "buildType": "apk"
       }
     },
     "production": {
