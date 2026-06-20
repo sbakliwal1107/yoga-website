@@ -20,11 +20,11 @@ export default function Payment() {
 
   const plan = PLANS.find((p) => p.id === planId) ?? PLANS[0];
   const upiLink =
-    upi://pay?pa=${encodeURIComponent(UPI.vpa)} +
-    &pn=${encodeURIComponent(UPI.payeeName)} +
-    &am=${plan.amount} +
-    &cu=INR +
-    &tn=${encodeURIComponent(`Yogini Rakshita ${plan.label})}`;
+    `upi://pay?pa=${encodeURIComponent(UPI.vpa)}` +
+    `&pn=${encodeURIComponent(UPI.payeeName)}` +
+    `&am=${plan.amount}` +
+    `&cu=INR` +
+    `&tn=${encodeURIComponent(`Yogini Rakshita ${plan.label}`)}`;
 
   async function pickScreenshot() {
     const res = await ImagePicker.launchImageLibraryAsync({
