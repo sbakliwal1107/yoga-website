@@ -47,15 +47,15 @@ export function buildPaymentNotifyMessage(input: {
   upiReference?: string | null;
 }): string {
   return [
-    🪷 New payment submitted on Yogini Rakshita,
+    `🪷 New payment submitted on Yogini Rakshita`,
     ``,
-    • User: ${input.userName},
-    • Phone: ${input.userPhone},
-    • Plan: ${input.planLabel},
-    • Amount: ₹${input.amount},
-    input.upiReference ? • UPI Ref: ${input.upiReference} : null,
+    `• User: ${input.userName}`,
+    `• Phone: ${input.userPhone}`,
+    `• Plan: ${input.planLabel}`,
+    `• Amount: ₹${input.amount}`,
+    `input.upiReference ? • UPI Ref: ${input.upiReference} : null`,
     ``,
-    Please verify in the Admin tab and approve to unlock access.,
+    `Please verify in the Admin tab and approve to unlock access.`,
   ]
     .filter((l): l is string => l !== null)
     .join("\n");
