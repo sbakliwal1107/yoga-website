@@ -7,8 +7,9 @@ import { Screen } from "@/components/Screen";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Field } from "@/components/Field";
 import { useAuth } from "@/context/AuthContext";
-import { COLORS, PLANS, UPI } from "@/lib/constants";
+import { COLORS, OWNER_WHATSAPP, PLANS, UPI } from "@/lib/constants";
 import { paymentsCol } from "@/lib/firebase";
+import { buildPaymentNotifyMessage, sendWhatsApp } from "@/lib/whatsapp";
 
 export default function Payment() {
   const { fbUser, profile } = useAuth();
@@ -19,11 +20,11 @@ export default function Payment() {
 
   const plan = PLANS.find((p) => p.id === planId) ?? PLANS[0];
   const upiLink =
-    `upi://pay?pa=${encodeURIComponent(UPI.vpa)}` +
-    `&pn=${encodeURIComponent(UPI.payeeName)}` +
-    `&am=${plan.amount}` +
-    `&cu=INR` +
-    `&tn=${encodeURIComponent(`Yogini Rakshita ${plan.label}`)}`;
+    upi://pay?pa=${encodeURIComponent(UPI.vpa)} +
+    &pn=${encodeURIComponent(UPI.payeeName)} +
+    &am=${plan.amount} +
+    &cu=INR +
+    &tn=${encodeURIComponent(`Yogini Rakshita ${plan.label})}`;
 
   async function pickScreenshot() {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -40,7 +41,7 @@ export default function Payment() {
     }
     try {
       setSubmitting(true);
-      const path = `payments/${fbUser.uid}/${Date.now()}.jpg`;
+      const path = payments/${fbUser.uid}/${Date.now()}.jpg;
       const ref = storage().ref(path);
       await ref.putFile(screenshotUri);
       const url = await ref.getDownloadURL();
@@ -61,9 +62,37 @@ export default function Payment() {
 
       setScreenshotUri(null);
       setReference("");
+
+      const notifyMessage = buildPaymentNotifyMessage({
+        userName: profile.name,
+        userPhone: profile.phone,
+        planLabel: plan.label,
+        amount: plan.amount,
+        upiReference: reference.trim() || null,
+      });
+
       Alert.alert(
         "Payment submitted",
-        "Your payment is pending verification. You'll get access as soon as the admin approves it (usually within a few hours).",
+        "Your payment is pending verification. Tap 'Notify admin' to ping the admin on WhatsApp so they verify it faster.",
+        [
+          { text: "Later", style: "cancel" },
+          ...(OWNER_WHATSAPP
+            ? [
+                {
+                  text: "Notify admin",
+                  onPress: async () => {
+                    const ok = await sendWhatsApp(OWNER_WHATSAPP, notifyMessage);
+                    if (!ok) {
+                      Alert.alert(
+                        "WhatsApp not available",
+                        "Could not open WhatsApp. The admin will still see your payment in their app.",
+                      );
+                    }
+                  },
+                },
+              ]
+            : []),
+        ],
       );
     } catch (e: any) {
       Alert.alert("Could not submit", e?.message ?? "Try again.");

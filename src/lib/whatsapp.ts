@@ -38,3 +38,25 @@ export function buildSignupMessage(input: {
     `Namaste 🙏`,
   ].join("\n");
 }
+
+export function buildPaymentNotifyMessage(input: {
+  userName: string;
+  userPhone: string;
+  planLabel: string;
+  amount: number;
+  upiReference?: string | null;
+}): string {
+  return [
+    🪷 New payment submitted on Yogini Rakshita,
+    ``,
+    • User: ${input.userName},
+    • Phone: ${input.userPhone},
+    • Plan: ${input.planLabel},
+    • Amount: ₹${input.amount},
+    input.upiReference ? • UPI Ref: ${input.upiReference} : null,
+    ``,
+    Please verify in the Admin tab and approve to unlock access.,
+  ]
+    .filter((l): l is string => l !== null)
+    .join("\n");
+}

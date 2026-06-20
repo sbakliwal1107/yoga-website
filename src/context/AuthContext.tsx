@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "react-native";
 import type { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { auth, usersCol } from "@/lib/firebase";
 import type { UserDoc } from "@/lib/types";
@@ -20,6 +21,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserDoc | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
+  // Tracks the last seen accessUntil so we can detect transitions and
+  // show a one-time "payment approved" alert. We only fire when access
+  // gains — past→future or null→future — never on initial load.
+  const lastAccessRef = useRef<{ initialized: boolean; activeUntilMs: number }>({
+    initialized: false,
+    activeUntilMs: 0,
+  });
+
   useEffect(() => {
     const unsub = auth().onAuthStateChanged((u) => {
       setFbUser(u);
@@ -27,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
         setProfileLoaded(true);
         setInitializing(false);
+        lastAccessRef.current = { initialized: false, activeUntilMs: 0 };
       }
     });
     return unsub;
@@ -35,13 +45,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!fbUser) return;
     setProfileLoaded(false);
+    lastAccessRef.current = { initialized: false, activeUntilMs: 0 };
     const unsub = usersCol()
       .doc(fbUser.uid)
       .onSnapshot(
         (snap) => {
-          setProfile(snap.exists ? (snap.data() as UserDoc) : null);
+          const next = snap.exists ? (snap.data() as UserDoc) : null;
+          setProfile(next);
           setProfileLoaded(true);
           setInitializing(false);
+
+          if (!next) return;
+          const nextMs = next.accessUntil?.toMillis?.() ?? 0;
+          const now = Date.now();
+          const prev = lastAccessRef.current;
+          if (!prev.initialized) {
+            lastAccessRef.current = { initialized: true, activeUntilMs: nextMs };
+            return;
+          }
+          // Detect "just got approved" — was inactive (past or null), now in the future.
+          const wasActive = prev.activeUntilMs > now;
+          const isActive = nextMs > now;
+          if (!wasActive && isActive && nextMs > prev.activeUntilMs) {
+            const expiry = next.accessUntil?.toDate?.();
+            Alert.alert(
+              "🎉 Payment approved",
+              expiry
+                ? Your access is active until ${expiry.toLocaleDateString()}. Enjoy the classes!
+                : "Your access has been activated. Enjoy the classes!",
+            );
+          }
+          lastAccessRef.current = { initialized: true, activeUntilMs: nextMs };
         },
         () => {
           setProfileLoaded(true);

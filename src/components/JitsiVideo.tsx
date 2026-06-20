@@ -1,19 +1,22 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { JITSI_DOMAIN } from "@/lib/constants";
 
 // Embeds a Jitsi Meet room inside a WebView so the user never leaves the app.
 // This works on the free public meet.jit.si server. For higher reliability
 // you can self-host Jitsi later — the props below stay the same.
+export type JitsiEvent = "joined" | "left" | "ready-to-close"
 export function JitsiVideo({
   room,
   displayName,
   isModerator = false,
+  onEvent,
 }: {
   room: string;
   displayName: string;
   isModerator?: boolean;
+  onEvent?: (e: JitsiEvent) => void;
 }) {
   const html = `<!doctype html>
 <html>
@@ -25,6 +28,11 @@ export function JitsiVideo({
   <body>
     <div id="meet"></div>
     <script>
+	  function send(type, payload) {
+		  if(window.ReactNativeWebView && window.ReactNativeWebView.postMessage){
+			  window.ReactNativeWebView.postMessage(JSON.stringify({ type : type, payload : payload || null}));
+		  }
+	  }	
       const api = new JitsiMeetExternalAPI('${JITSI_DOMAIN}', {
         roomName: ${JSON.stringify(room)},
         parentNode: document.getElementById('meet'),
@@ -43,12 +51,22 @@ export function JitsiVideo({
           ]
         }
       });
-      api.addEventListener('readyToClose', () => {
-        window.ReactNativeWebView && window.ReactNativeWebView.postMessage('close');
-      });
+     api.addEventListener('videoConferenceJoined',() => send('joined'));
+	 api.addEventListener('videoConferenceLeft', () => send('left'));
+	 api.addEventListener('readyToclose', () => send('ready-to-close'));
     </script>
   </body>
 </html>`;
+
+  function handleMessage(e: WebViewMessageEvent) {
+	  if(!onEvent) return;
+	  try {
+		  const data = JSON.parse(e.nativeEvent.data) as { type: JitsiEvent };
+		  if (data?.type) onEvent(data.type);
+	  } catch {
+		  //ignore non-JSON messages
+	  }
+  }	
 
   return (
     <View style={styles.container}>
@@ -59,6 +77,8 @@ export function JitsiVideo({
         domStorageEnabled
         mediaPlaybackRequiresUserAction={false}
         allowsInlineMediaPlayback
+		mediaCapturePermissionGrantType="grant"
+		onMessage={handleMessage}
         style={styles.web}
       />
     </View>

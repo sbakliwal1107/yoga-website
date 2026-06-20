@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import firestore from "@react-native-firebase/firestore";
 import { Screen } from "@/components/Screen";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { useAuth } from "@/context/AuthContext";
 import { COLORS, DEMO_LIMIT, JITSI_ROOM_PREFIX } from "@/lib/constants";
 import { demoClassesLeft, hasPaidAccess } from "@/lib/access";
-import { usersCol } from "@/lib/firebase";
 
 export default function Demo() {
   const { profile, fbUser } = useAuth();
@@ -33,15 +31,7 @@ export default function Demo() {
 
     try {
       setJoining(true);
-      // Atomically increment the count so the limit can't be bypassed by tapping fast.
-      if (!paid) {
-        await usersCol()
-          .doc(fbUser.uid)
-          .update({
-            demoClassesJoined: firestore.FieldValue.increment(1),
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-          });
-      }
+      
       const today = new Date().toISOString().slice(0, 10);
       const room = `${JITSI_ROOM_PREFIX}-demo-${today}`;
       router.push({ pathname: "/class/[room]", params: { room, kind: "demo" } });
@@ -69,6 +59,11 @@ export default function Demo() {
         <Text style={[styles.label, { marginTop: 12 }]}>What you'll experience</Text>
         <Text style={styles.value}>
           A short guided session — easy postures, breathwork, and a calm wind-down.
+        </Text>
+		<Text style={[styles.label, { marginTop: 12 }]}>How counting works</Text>
+        <Text style={styles.value}>
+          A demo is counted only if you stay in the class for at least 10 minutes.
+          Joining and leaving early won't reduce your remaining demos.
         </Text>
       </View>
 

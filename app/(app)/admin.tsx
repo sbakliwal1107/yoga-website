@@ -32,13 +32,17 @@ export default function Admin() {
     if (profile?.role !== "admin") return;
     const u = usersCol()
       .orderBy("createdAt", "desc")
-      .onSnapshot((snap) =>
-        setUsers(snap.docs.map((d) => ({ id: d.id, ...(d.data() as UserDoc) }))),
+      .onSnapshot(
+	    (snap) =>
+		  setUsers(snap.docs.map((d) => ({ id: d.id, ...(d.data() as UserDoc) }))),
+		(err) => console.warn("Admin users query failed", err),  
       );
     const p = paymentsCol()
       .orderBy("createdAt", "desc")
-      .onSnapshot((snap) =>
-        setPayments(snap.docs.map((d) => ({ id: d.id, ...(d.data() as PaymentDoc) }))),
+      .onSnapshot(
+	    (snap) =>
+		  setPayments(snap.docs.map((d) => ({ id: d.id, ...(d.data() as PaymentDoc) }))),
+		(err) => console.warn("Admin payments query failed", err),  
       );
     return () => {
       u();

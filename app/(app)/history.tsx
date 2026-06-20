@@ -9,7 +9,7 @@ import type { PaymentDoc } from "@/lib/types";
 type Row = PaymentDoc & { id: string };
 
 const STATUS_COLOR: Record<PaymentDoc["status"], string> = {
-  pending: "#D97706",
+  pending: "D97706_1",
   approved: COLORS.success,
   rejected: COLORS.danger,
 };
@@ -17,27 +17,48 @@ const STATUS_COLOR: Record<PaymentDoc["status"], string> = {
 export default function History() {
   const { fbUser } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!fbUser) return;
+    setError(null);
+    // We deliberately don't use orderBy("createdAt", "desc") on the server
+    // because combining it with a where() requires a Firestore composite index.
+    // At per-user payment volumes this is a handful of docs — we sort client-side.
     const unsub = paymentsCol()
       .where("userId", "==", fbUser.uid)
-      .orderBy("createdAt", "desc")
-      .onSnapshot((snap) => {
-        setRows(snap.docs.map((d) => ({ id: d.id, ...(d.data() as PaymentDoc) })));
-      });
+      .onSnapshot(
+        (snap) => {
+          const docs = snap.docs.map((d) => ({ id: d.id, ...(d.data() as PaymentDoc) }));
+          docs.sort((a, b) => {
+            const am = a.createdAt?.toMillis?.() ?? 0;
+            const bm = b.createdAt?.toMillis?.() ?? 0;
+            return bm - am;
+          });
+          setRows(docs);
+        },
+        (err) => {
+          console.warn("History query failed:", err);
+          setError(err?.message ?? "Could not load payment history.");
+        },
+      );
     return unsub;
   }, [fbUser?.uid]);
 
   return (
     <Screen scroll={false}>
       <Text style={styles.heading}>Payment history</Text>
+      {error ? (
+        <Text style={{ color: COLORS.danger, marginBottom: 12 }}>{error}</Text>
+      ) : null}
       <FlatList
         data={rows}
         keyExtractor={(r) => r.id}
         contentContainerStyle={{ paddingBottom: 40 }}
         ListEmptyComponent={
-          <Text style={{ color: COLORS.muted, marginTop: 20 }}>No payments yet.</Text>
+          <Text style={{ color: COLORS.muted, marginTop: 20 }}>
+            {error ? "" : "No payments yet."}
+          </Text>
         }
         renderItem={({ item }) => {
           const plan = PLANS.find((p) => p.id === item.planId);
