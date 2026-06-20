@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             Alert.alert(
               "🎉 Payment approved",
               expiry
-                ? Your access is active until ${expiry.toLocaleDateString()}. Enjoy the classes!
+                ? `Your access is active until ${expiry.toLocaleDateString()}. Enjoy the classes!`
                 : "Your access has been activated. Enjoy the classes!",
             );
           }
