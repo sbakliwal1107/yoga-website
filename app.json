@@ -9,6 +9,7 @@
     "newArchEnabled": true,
 	"icon": "./assets/icon.png",
 	"splash": {
+		"image": "./assets/icon.png",
 		"backgroundColor": "#FFF7ED",
 		"resizeMode": "contain"
 	},
